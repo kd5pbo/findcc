@@ -13,11 +13,6 @@ Options:
   -n=15: Length of number to find, not including the check digit.
   -q=false: Be quiet; don't print the header.
 
-The source file is findcc.go.  Included are prebuilt binaries for Windows
-(findcc.windows.amd64.exe), Linux (findcc.linux.amd64), and OpenBSD
-(findcc.openbsd.amd64).  Please note that as go produces statically-linked
-binaries, they tend to be rather large.
-
 Test Data
 ---------
 
