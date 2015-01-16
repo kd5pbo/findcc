@@ -36,7 +36,7 @@ OFFSET  LINE  NUMBER
   3103    18  9876543219876544
   3104    18  8765432198765449
 
-Perl Hacks
+Perl Hack
 -----------
 
 The following is a perl hack to calculate the sum mod 10 checksum of a 15-digit
