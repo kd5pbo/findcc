@@ -1,0 +1,42 @@
+findcc
+------
+
+findcc searches for sequences of an arbitrary number of ascii digits followed
+by a single ascii digit that is the sum of the found digits modulus 10.  If no
+filename is given, the standard input is used.  The offset in the file and
+line number where the number was found, as well as the number with its check
+digit are printed in a tabular format, separated by whitespace.
+
+Usage findcc [-q] [-n] [filename]
+
+Options:
+  -n=15: Length of number to find, not including the check digit.
+  -q=false: Be quiet; don't print the header.
+
+The source file is findcc.go.  Included are prebuilt binaries for Windows
+(findcc.windows.amd64.exe), Linux (findcc.linux.amd64), and OpenBSD
+(findcc.openbsd.amd64).  Please note that as go produces statically-linked
+binaries, they tend to be rather large.
+
+Test Data
+---------
+
+The file testdata contains test data.  It is mostly random bytes, interspersed
+with known good (and somewhat contrived) 15+1 digit numbers.  The output is
+intended to be:
+
+OFFSET  LINE    NUMBER
+  1024     5    1234567890123450
+  2064    10    1122334455667784
+  3104    18    9876543219876544
+  3105    18    8765432198765449
+
+Perl Hack
+-----------
+
+The following is a perl hack to calculate the checksum of a 15-digit number.
+It is useful in verifying the output of findcc.
+
+perl -E 'say+length(join("",map{"x"x$_}split//,$ARGV[0]))%10if$ARGV[0]=~/\d{15}/' 876543219876544
+
+The output should be 9.
