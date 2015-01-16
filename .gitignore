@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# Ignore binaries
+findcc.linux.amd64
+findcc.openbsd.amd64
