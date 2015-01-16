@@ -23,6 +23,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/joeljunstrom/go-luhn"
 	"io"
 	"os"
 	"unicode"
@@ -33,8 +34,10 @@ import (
 func main() { os.Exit(mymain()) }
 func mymain() int {
 	/* Get the number of digits in the number on the command line */
-	numlen := flag.Int("n", 15, "Length of number to find, not "+
-		"including the check digit.")
+	numlen := flag.Int("n", 16, "Length of number to find, including "+
+		"the check digit.")
+	mod10 := flag.Bool("mod10", false, "Use a simple sum modulus 10 "+
+		"instead of the Luhn algorithm.")
 	quiet := flag.Bool("q", false, "Be quiet; don't print the header.")
 	/* Usage statement */
 	flag.Usage = func() {
@@ -42,11 +45,12 @@ func mymain() int {
 			os.Args[0])
 		fmt.Fprintf(os.Stderr, `
 
-Search for sequences of an arbitrary number of ascii digits followed by a
-single ascii digit that is the sum of the found digits modulus 10.  If no
-filename is given, the standard input is used.  The offset in the file and
-line number where the number was found, as well as the number with its check
-digit are printed in a tabular format, separated by whitespace.
+Search for sequences of a set number of ascii digits (controllable by -n) that
+either passes validation with the Luhn algorithm or has a final digit that is
+equal to the modulus 10 sum of the other digits (with -mod10).  If no filename
+is given, the standard input is used.  The offset in the file and line number
+where the number was found, as well as the number with its check digit are
+printed in a tabular format, separated by whitespace.
 
 Options:
 `)
@@ -110,30 +114,35 @@ Options:
 			}
 			continue
 		}
-		/* If it's a digit and we have enough, check if it's a valid
-		checksum */
-		if len(digits) == *numlen {
-			exp := 0 /* Expected checksum */
-			/* Calculate the expected checksum */
-			for _, d := range digits {
-				exp = (exp + (int(d) - '0')) % 10
-			}
-			/* Print the match if we have it */
-			if int(buf[0]-'0') == exp {
-				fmt.Printf("%6v  %4v  %v%c\n",
-					nread-len(digits)-1,
-					nline,
-					string(digits), buf[0])
-			}
-		}
-		/* No number that checks out yet.  Add the new digit to the
-		digit buffer and trim it down to size. */
+		/* Update the digit buffer with the new digit */
 		digits = append(digits, buf...)
 		for len(digits) > *numlen { /* Should only loop once */
 			digits = digits[1:]
+		}
+		/* If we have enough, report it if it's a valid checksum */
+		if (len(digits) == *numlen) &&
+			((*mod10 && mod10Valid(digits)) ||
+				(!*mod10 && luhn.Valid(string(digits)))) {
+			fmt.Printf("%6v  %4v  %v\n",
+				nread-len(digits)-1,
+				nline,
+				string(digits))
+
 		}
 	}
 	/* Should never get here */
 	fmt.Fprintf(os.Stderr, "Unpossible code execution.  Please debug.\n")
 	return -5
+}
+
+/* mod10Valid tests whether the input byte array is valid, according to the
+help output for -mod10 */
+func mod10Valid(digits []byte) bool {
+	exp := 0 /* Expected checksum */
+	/* Calculate the expected checksum */
+	for _, d := range digits[:len(digits)-1] {
+		exp = (exp + (int(d) - '0')) % 10
+	}
+	/* Print the match if we have it */
+	return int(digits[len(digits)-1]-'0') == exp
 }
